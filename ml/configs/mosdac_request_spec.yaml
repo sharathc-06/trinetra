@@ -1,0 +1,57 @@
+# TRINETRA - Phase 2 / Step 3: what satellite data we will request from MOSDAC.
+# This is a PLAN, not code. Later steps (storm list, order, download) read it.
+# Values marked TO_VERIFY must be checked in the MOSDAC catalogue when logged in.
+
+access:
+  portal: https://mosdac.gov.in            # sign up / login required
+  method_primary: UOPS web order           # Order Data -> pick product, AOI, bands, format
+  method_bulk: SFTP                        # host download.mosdac.gov.in, port 22, folder /Order
+  method_alternative: mdapi                # MOSDAC's own download tool, max 5000 files/day/user
+  credentials_env: [MOSDAC_USERNAME, MOSDAC_PASSWORD]   # in .env, never committed
+  download_runs_on: colab                  # pull straight into Google Drive, not the laptop
+
+area_of_interest:                          # our choice, padded around the IMD RSMC area
+  lat_min: 0
+  lat_max: 30
+  lon_min: 40
+  lon_max: 100
+
+satellites:
+  - name: INSAT-3D
+    product_level: L1B                     # calibrated + geolocated imager data
+    use: main training imagery
+    TO_VERIFY: first available date in archive (INSAT-3D launched 2013)
+  - name: INSAT-3DR
+    product_level: L1B
+    use: second imager, cross-check / gap filling
+    TO_VERIFY: first available date in archive (INSAT-3DR launched 2016)
+
+bands_wanted:                              # TO_VERIFY exact band names in the order form
+  - TIR1        # thermal infrared, main cloud-top temperature signal, day + night
+  - WV          # water vapour
+  - MIR         # mid infrared
+  - TIR2        # thermal infrared 2 (optional)
+  - VIS         # visible, daytime only (optional, bigger files)
+
+format_preference: GeoTIFF                 # TO_VERIFY vs HDF5; GeoTIFF is easier to read, HDF5 is the original
+
+scatterometer_winds:
+  note: >
+    The handoff says "OSCAT". On MOSDAC the scatterometer missions are listed as
+    SCATSAT-1 (carries OSCAT) and EOS-06 scatterometer products, plus Oceansat-2.
+  TO_VERIFY: which of these has usable wind products over our storm dates
+  priority: after INSAT imagery is working
+
+storm_selection:                           # applied to the IMD workbook in a later step
+  source: raw/imd_best_track/imd_best_tracks.xlsx
+  years_with_imagery: "2013 onward (INSAT-3D era)"   # IMD tracks go back to 1982 but INSAT imagery does not
+  include: all systems at Depression (D) grade or stronger
+  time_window:
+    start: first best-track fix minus 24 h
+    end: last best-track fix plus 12 h
+  note: order storm-by-storm windows, not whole years, to keep volume manageable
+
+ordering_order:                            # do small first, scale only after checking
+  1: one storm, TIR1 only, to test the whole pipeline end to end
+  2: all selected storms, TIR1 + WV
+  3: add MIR / VIS / TIR2 only if the model needs them

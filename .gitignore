@@ -1,0 +1,27 @@
+# Python
+venv/
+.venv/
+backend/venv/
+__pycache__/
+*.pyc
+.env
+
+# Node / frontend
+frontend/node_modules/
+frontend/dist/
+
+# ML data: ignore everything under ml/data except folder structure + README
+ml/data/**
+!ml/data/**/
+!ml/data/README.md
+!ml/data/**/.gitkeep
+
+# ML artifacts - never commit, too large
+ml/checkpoints/
+*.pt
+*.pth
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
